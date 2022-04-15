@@ -1,0 +1,6 @@
+__pycache__/
+.pytest_cache/
+/venv
+database.ini
+.DS_Store
+*.pyc
