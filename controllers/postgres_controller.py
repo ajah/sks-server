@@ -1,5 +1,5 @@
 import psycopg2
-from configparser import ConfigParser
+# from configparser import ConfigParser
 import os
 
 columns= ['FPE', 'focus_area', 'legal_status', 'name', 'location_municipality', 'location_postal_code', 'legal_designation_type', 'location_region', 'location_country', 'revenue', 'employees', 'website', 'npk_id', 'regulating_authority', 'revenue_currency', 'revenue_year', 'data_source', 'legal_status_date', 'record_type']
@@ -20,14 +20,14 @@ def read_table(_id, type, identifier,limit=10):
         HOST=os.getenv('HOST')
         USER=os.getenv('USER')
         PASSWORD=os.getenv('PASSWORD')
-        PORT=os.getenv('PORT')
+        DB_PORT=os.getenv('DB_PORT')
 
         conn = psycopg2.connect(
             dbname=DATABASE, 
             user=USER, 
             password=PASSWORD, 
             host=HOST,
-            port=PORT)
+            port=DB_PORT)
 
         cur = conn.cursor()
 

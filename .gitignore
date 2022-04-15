@@ -4,3 +4,4 @@ __pycache__/
 database.ini
 .DS_Store
 *.pyc
+startup.sh
