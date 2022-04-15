@@ -34,7 +34,7 @@ es = connect_elasticsearch()
 
 app = Flask(__name__)
 
-white = ['http://localhost:3000','http://0.0.0.0:3000']
+white = ['http://localhost:3000','http://0.0.0.0:3000','https://sks-interface-l5jum.ondigitalocean.app']
 
 @app.after_request
 def add_cors_headers(response):
