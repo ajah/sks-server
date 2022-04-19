@@ -21,6 +21,7 @@ from controllers.entities_controller import (
 from controllers.elasticsearch_controller import (
   connect_elasticsearch, 
   search_records,
+  count_records
   )
 
 def comma_separated_params_to_list(param):
@@ -63,7 +64,6 @@ def home():
   return "Sector Knowledge Sharing Project"
 
 @app.route('/search', methods=['GET'])
-# @cross_origin()
 def search():
   keyword = request.args.get("q")
   # Filter forms a list of the types in the URL to pass to ES
@@ -71,6 +71,15 @@ def search():
   if len(keyword) > 1:
     es.indices.refresh(index="*")
     return search_records(keyword=keyword,filter=filter)
+  else:
+    pass
+
+@app.route('/count', methods=['GET'])
+def count():
+  keyword = request.args.get("q")
+  if len(keyword) > 1:
+    es.indices.refresh(index="*")
+    return count_records(keyword=keyword)
   else:
     pass
 

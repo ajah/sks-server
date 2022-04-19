@@ -90,6 +90,32 @@ def search_all_records(index, es=es):
 
   return res['hits']
 
+# TODO: Refactor count_records & search_records so query is not repeated
+
+def count_records(keyword, index=None,es=es):
+  query = {
+    "query": {
+      "simple_query_string": {
+        "query": keyword,
+        "fields": [ 
+            # Activities fields
+            "grant_title", "grant_region","grant_region", "recipient_organization", "grant_municipality", "expected_results", "program_name",
+            # Entities fields
+            "name","focus_area","location_municipality","location_region","location_country"
+            ],
+        "default_operator": "and"
+      }
+    }
+  }
+
+  resp_dict = {}
+
+  for i in ['*','activities', 'entities']:
+    resp = es.count(index=i, body=query)
+    result = resp['count']
+    resp_dict[i] = result
+    
+  return resp_dict
 
 def search_records(keyword,  filter, index=None,es=es):
   # query = {
