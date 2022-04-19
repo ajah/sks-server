@@ -134,7 +134,7 @@ def search_records(keyword,  filter, index=None,es=es):
   # }
   
   query = {
-    "size": 1000,
+    "size": 100,
     "query": {
       "simple_query_string": {
         "query": keyword,
