@@ -92,17 +92,33 @@ def search_all_records(index, es=es):
 
 
 def search_records(keyword,  filter, index=None,es=es):
+  # query = {
+  #   "size": 1000,
+  #   "query": {
+  #     "query_string": {
+  #       "fields": [ 
+  #         # Activities fields
+  #         "grant_title", "grant_region","grant_region", "recipient_organization", "grant_municipality", "expected_results", "program_name",
+  #         # Entities fields
+  #         "name","focus_area","location_municipality","location_region","location_country"
+  #          ],
+  #       "query": keyword
+  #     }
+  #   }
+  # }
+  
   query = {
     "size": 1000,
     "query": {
-      "query_string": {
+      "simple_query_string": {
+        "query": keyword,
         "fields": [ 
-          # Activities fields
-          "grant_title", "grant_region","grant_region", "recipient_organization", "grant_municipality", "expected_results", "program_name",
-          # Entities fields
-          "name","focus_area","location_municipality","location_region","location_country"
-           ],
-        "query": keyword
+            # Activities fields
+            "grant_title", "grant_region","grant_region", "recipient_organization", "grant_municipality", "expected_results", "program_name",
+            # Entities fields
+            "name","focus_area","location_municipality","location_region","location_country"
+            ],
+        "default_operator": "and"
       }
     }
   }
