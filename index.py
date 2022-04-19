@@ -20,6 +20,7 @@ from controllers.entities_controller import (
 
 from controllers.elasticsearch_controller import (
   connect_elasticsearch, 
+  search_all_records,
   search_records,
   count_records
   )
@@ -73,6 +74,12 @@ def search():
     return search_records(keyword=keyword,filter=filter)
   else:
     pass
+
+@app.route('/search-all/<index>', methods=['GET'])
+def search_all(index):
+  es.indices.refresh(index="*")
+  return search_all_records(index=index)
+
 
 @app.route('/count', methods=['GET'])
 def count():
