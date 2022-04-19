@@ -23,8 +23,7 @@ pp = pprint.PrettyPrinter(indent=2)
 dotenv_path = join(dirname(__file__), '.env')
 load_dotenv()
 
-# ents_es = "sks-backend/data/processed/ents_es_upload.csv"
-acts_es = "/Users/brittany/repos/sks-project/sks-backend/data/processed/acts_es_upload.csv"
+ents_es = "sks-backend/data/processed/ents_es_upload.csv"
 
 def csv_to_json(filepath):
     df = pd.read_csv(filepath)
@@ -110,7 +109,7 @@ def count_records(keyword, index=None,es=es):
 
   resp_dict = {}
 
-  for i in ['*','new-activities', 'entities']:
+  for i in ['new-activities,entities','new-activities', 'entities']:
     resp = es.count(index=i, body=query)
     result = resp['count']
     resp_dict[i] = result
