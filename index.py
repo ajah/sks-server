@@ -1,6 +1,7 @@
-from flask import Flask, request
+from flask import Flask, request, Response
 from flask_cors import CORS
 from flask import json
+import pandas as pd
 
 app = Flask(__name__)
 cors = CORS(app)
@@ -22,7 +23,8 @@ from controllers.elasticsearch_controller import (
   connect_elasticsearch, 
   search_all_records,
   search_records,
-  count_records
+  count_records,
+  format_download
   )
 
 def comma_separated_params_to_list(param):
@@ -72,6 +74,22 @@ def search():
   if len(keyword) > 1:
     es.indices.refresh(index="*")
     return search_records(keyword=keyword,filter=filter)
+  else:
+    pass
+
+@app.route('/download', methods=['GET'])
+def download():
+  keyword = request.args.get("q")
+  filter = [r for r in request.args.get("filter").split(",")]
+  if len(keyword) > 1:
+    es.indices.refresh(index="*")
+    data = search_records(keyword=keyword,filter=filter)
+    csv = format_download(data)
+    return Response(
+        csv,
+        mimetype="text/csv",
+        headers={"Content-disposition":
+                 "attachment; filename=sks-download.csv"})
   else:
     pass
 
@@ -155,6 +173,16 @@ def get_one_entity(_id):
   )
   return response 
 
+@app.route("/testCSV")
+def getPlotCSV():
+    # with open("outputs/Adjacency.csv") as fp:
+    #     csv = fp.read()
+    csv = '1,2,3\n4,5,6\n'
+    return Response(
+        csv,
+        mimetype="text/csv",
+        headers={"Content-disposition":
+                 "attachment; filename=test.csv"})
 
 if __name__ == "__main__":
     app.run(debug=True)

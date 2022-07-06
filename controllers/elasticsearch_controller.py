@@ -163,6 +163,12 @@ def search_records(keyword,  filter, index=None, es=es):
 
   return res['hits']
 
-if __name__ == '__main__':
-  upload_data(acts_es,True, index='new-activities') 
-  upload_data(ents_es,True, index='entities') 
+def format_download(data):
+    hits = [d['_source'] for d in data['hits']]
+    csv = pd.DataFrame([x for x in hits]).drop(columns='Unnamed: 0').to_csv()
+    return csv
+
+
+# if __name__ == '__main__':
+  # upload_data(acts_es,True, index='new-activities') 
+  # upload_data(ents_es,True, index='entities') 
