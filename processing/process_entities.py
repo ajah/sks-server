@@ -102,7 +102,7 @@ def process_scraper_output(df):
     
 def main():
   print('Processing data...')
-  scraped_df = pd.read_csv('sks-backend/webscraper/output.csv')
+  scraped_df = pd.read_csv('./../webscraper/output.csv')
 
   df_list = [
     general_info_df.pipe(process_program_codes),
@@ -128,7 +128,12 @@ def main():
       data_source=data_source_url,
       legal_status_date=2019,
       type='entity')\
-    .rename(columns={'BN':'external_id'})
+    .rename(columns={'BN':'external_id'})\
+    .replace({
+        "Charity provided description when other program areas are not applicable, Charity provided description when other program areas are not applicable, Charity provided description when other program areas are not applicable":"",
+        "Charity provided description when other program areas are not applicable":""
+      })
+
     
   final_df.to_csv('./../data/processed/sks_entities_interface_{}.csv'.format(timestamp),index=False,header=True)
   print('Interface CSV exported')
