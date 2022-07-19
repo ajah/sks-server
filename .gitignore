@@ -5,3 +5,4 @@ database.ini
 .DS_Store
 *.pyc
 startup.sh
+*.ipynb

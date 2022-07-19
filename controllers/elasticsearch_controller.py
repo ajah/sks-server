@@ -116,7 +116,7 @@ def count_records(keyword, index=None,es=es):
     
   return resp_dict
 
-def search_records(keyword,  filter, index=None, es=es):
+def search_records(keyword,  doctype, operator, index=None, es=es):
   # query = {
   #   "size": 1000,
   #   "query": {
@@ -143,18 +143,18 @@ def search_records(keyword,  filter, index=None, es=es):
             # Entities fields
             "name","focus_area","location_municipality","location_region","location_country"
             ],
-        "default_operator": "and"
+        "default_operator": operator
       }
     }
   }
 
   index = None
-  if 'activity' in filter and 'entity' in filter:
+  if 'activity' in doctype and 'entity' in doctype:
     index = "new-activities,entities" 
     # index = "*" 
-  elif filter == ['activity']:
+  elif doctype == ['activity']:
     index = 'new-activities'
-  elif filter == ['entity']:
+  elif doctype == ['entity']:
     index = 'entities'
 
   res = es.search(index=index, body=query)

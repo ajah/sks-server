@@ -70,20 +70,22 @@ def home():
 def search():
   keyword = request.args.get("q")
   # Filter forms a list of the types in the URL to pass to ES
-  filter = [r for r in request.args.get("filter").split(",")]
+  doctype = [r for r in request.args.get("doctype").split(",")]
+  operator = request.args.get("operator")
   if len(keyword) > 1:
     es.indices.refresh(index="*")
-    return search_records(keyword=keyword,filter=filter)
+    return search_records(keyword=keyword,doctype=doctype,operator=operator)
   else:
     pass
 
 @app.route('/download', methods=['GET'])
 def download():
   keyword = request.args.get("q")
-  filter = [r for r in request.args.get("filter").split(",")]
+  doctype = [r for r in request.args.get("doctype").split(",")]
+  operator = request.args.get("operator")
   if len(keyword) > 1:
     es.indices.refresh(index="*")
-    data = search_records(keyword=keyword,filter=filter)
+    data = search_records(keyword=keyword,doctype=doctype,operator=operator)
     csv = format_download(data)
     return Response(
         csv,
@@ -175,8 +177,6 @@ def get_one_entity(_id):
 
 @app.route("/testCSV")
 def getPlotCSV():
-    # with open("outputs/Adjacency.csv") as fp:
-    #     csv = fp.read()
     csv = '1,2,3\n4,5,6\n'
     return Response(
         csv,
