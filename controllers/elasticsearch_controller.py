@@ -91,7 +91,7 @@ def search_all_records(index, es=es):
 
 # TODO: Refactor count_records & search_records so query is not repeated
 
-def count_records(keyword, index=None,es=es):
+def count_records(keyword, operator, index=None,es=es):
   query = {
     "query": {
       "simple_query_string": {
@@ -102,7 +102,7 @@ def count_records(keyword, index=None,es=es):
             # Entities fields
             "name","focus_area","location_municipality","location_region","location_country"
             ],
-        "default_operator": "and"
+        "default_operator": operator
       }
     }
   }
@@ -116,7 +116,9 @@ def count_records(keyword, index=None,es=es):
     
   return resp_dict
 
-def search_records(keyword,  doctype, operator, municipality="", region="", index=None, es=es):
+
+
+def search_records(keyword,  doctype, operator, size, municipality="", region="", index=None, es=es):
   filter = []
   if municipality or region:
     filter = [
@@ -149,6 +151,7 @@ def search_records(keyword,  doctype, operator, municipality="", region="", inde
      ]
   
   query = {
+    "size" : size,
     "query": {
         "bool": {
             "must": {
@@ -180,10 +183,9 @@ def search_records(keyword,  doctype, operator, municipality="", region="", inde
     index = 'entities'
 
   res = es.search(index=index, body=query)
-  print("Keywords: {}".format(keyword))
-  pp.pprint("Total hits: {}".format(res['hits']['total']['value']))
 
   return res['hits']
+
 
 def format_download(data):
     hits = [d['_source'] for d in data['hits']]
