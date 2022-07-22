@@ -153,7 +153,7 @@ def search_records(keyword,  doctype, operator, municipality="", region="", inde
         "bool": {
             "must": {
                 "simple_query_string": {
-                    "query": "environment",
+                    "query": keyword,
                     "fields": [
                         "grant_title",
                         "recipient_organization",
