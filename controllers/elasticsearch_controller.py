@@ -116,37 +116,59 @@ def count_records(keyword, index=None,es=es):
     
   return resp_dict
 
-def search_records(keyword,  doctype, operator, index=None, es=es):
-  # query = {
-  #   "size": 1000,
-  #   "query": {
-  #     "query_string": {
-  #       "fields": [ 
-  #         # Activities fields
-  #         "grant_title", "grant_region","grant_region", "recipient_organization", "grant_municipality", "expected_results", "program_name",
-  #         # Entities fields
-  #         "name","focus_area","location_municipality","location_region","location_country"
-  #          ],
-  #       "query": keyword
-  #     }
-  #   }
-  # }
+def search_records(keyword,  doctype, operator, municipality="", region="", index=None, es=es):
+  filter = []
+  if municipality or region:
+    filter = [
+         {
+             "bool": {
+                 "should": [
+                     {
+                         "match": {
+                             "grant_region": region
+                         }
+                     },
+                     {
+                         "match": {
+                             "location_region": region
+                         }
+                     },
+                     {
+                         "match": {
+                             "location_municipality": municipality
+                         }
+                     },
+                     {
+                         "match": {
+                             "location_municipality": municipality
+                         }
+                     }
+                 ]
+             }
+         }
+     ]
   
   query = {
-    "size": 100,
     "query": {
-      "simple_query_string": {
-        "query": keyword,
-        "fields": [ 
-            # Activities fields
-            "grant_title", "grant_region","grant_region", "recipient_organization", "grant_municipality", "expected_results", "program_name",
-            # Entities fields
-            "name","focus_area","location_municipality","location_region","location_country"
-            ],
-        "default_operator": operator
-      }
+        "bool": {
+            "must": {
+                "simple_query_string": {
+                    "query": "environment",
+                    "fields": [
+                        "grant_title",
+                        "recipient_organization",
+                        "expected_results",
+                        "program_name",
+                        "name",
+                        "focus_area"
+                    ],
+                    "default_operator": operator
+                }
+            },
+             "filter": filter
+        }
     }
-  }
+}
 
   index = None
   if 'activity' in doctype and 'entity' in doctype:
