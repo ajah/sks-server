@@ -68,14 +68,22 @@ def home():
   return "Sector Knowledge Sharing Project"
 
 @app.route('/search', methods=['GET'])
-def search():
+def search(municipality="",region=""):
   keyword = request.args.get("q")
   # Filter forms a list of the types in the URL to pass to ES
   doctype = [r for r in request.args.get("doctype").split(",")]
   operator = request.args.get("operator")
+  municipality = request.args.get("municipality") 
+  region = request.args.get("region") 
   if len(keyword) > 1:
     es.indices.refresh(index="*")
-    return search_records(keyword=keyword,doctype=doctype,operator=operator)
+    return search_records(
+      keyword=keyword,
+      doctype=doctype,
+      operator=operator,
+      municipality=municipality,
+      region=region
+      )
   else:
     pass
 
