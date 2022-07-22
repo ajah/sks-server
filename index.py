@@ -82,7 +82,8 @@ def search(municipality="",region=""):
       doctype=doctype,
       operator=operator,
       municipality=municipality,
-      region=region
+      region=region,
+      size=100
       )
   else:
     pass
@@ -92,9 +93,11 @@ def download():
   keyword = request.args.get("q")
   doctype = [r for r in request.args.get("doctype").split(",")]
   operator = request.args.get("operator")
+  municipality = request.args.get("municipality") 
+  region = request.args.get("region") 
   if len(keyword) > 1:
     es.indices.refresh(index="*")
-    data = search_records(keyword=keyword,doctype=doctype,operator=operator)
+    data = search_records(keyword=keyword,doctype=doctype,operator=operator,size=10000)
     csv = format_download(data)
     return Response(
         csv,
@@ -113,9 +116,14 @@ def search_all(index):
 @app.route('/count', methods=['GET'])
 def count():
   keyword = request.args.get("q")
+  # doctype = [r for r in request.args.get("doctype").split(",")]
+  operator = request.args.get("operator")
   if len(keyword) > 1:
     es.indices.refresh(index="*")
-    return count_records(keyword=keyword)
+    return count_records(
+      keyword=keyword, 
+      operator=operator
+      )
   else:
     pass
 
