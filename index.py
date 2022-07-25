@@ -43,7 +43,8 @@ white = [
   'http://0.0.0.0:3000',
   'https://sks-interface-l5jum.ondigitalocean.app',
   'https://sectorknowledge.ca',
-  'https://sks-interface-ajah-hxdf7.ondigitalocean.app'
+  'https://sks-interface-ajah-hxdf7.ondigitalocean.app',
+  'https://www.sectorknowledge.ca'
   ]
 
 @app.after_request
