@@ -119,37 +119,45 @@ def count_records(keyword, operator, index=None,es=es):
 
 
 def search_records(keyword,  doctype, operator, size, municipality="", region="", index=None, es=es):
-  filter = []
-  if municipality or region:
-    filter = [
+  # filter = []
+  # if municipality != None or region != None:
+  if municipality is None:
+    municipality = ""
+
+  if region is None:
+    region = ""
+  filter = [
          {
              "bool": {
                  "should": [
                      {
                          "match": {
-                             "grant_region": region
+                             "grant_region": "{}".format(region)
                          }
                      },
                      {
                          "match": {
-                             "location_region": region
+                             "location_region": "{}".format(region)
                          }
                      },
                      {
                          "match": {
-                             "location_municipality": municipality
+                             "location_municipality": "{}".format(municipality)
                          }
                      },
                      {
                          "match": {
-                             "location_municipality": municipality
+                             "location_municipality": "{}".format(municipality)
                          }
                      }
                  ]
              }
          }
      ]
-  
+
+     
+  print(municipality, region)
+  print(filter)
   query = {
     "size" : size,
     "query": {
