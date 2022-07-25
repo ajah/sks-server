@@ -118,10 +118,14 @@ def count_records(keyword, operator, index=None,es=es):
 
 
 
-def search_records(keyword,  doctype, operator, size, municipality="", region="", index=None, es=es):
-  filter = []
-  
-  if None not in (municipality, region):
+def search_records(keyword,  doctype, operator, size, municipality=None, region=None, index=None, es=es):
+  # filter = []
+
+  print("Municipality: {}\nRegion: {}".format(municipality, region))
+
+  if municipality == "" and region == "":
+    filter = [] 
+  elif municipality is None and region is not None:
     filter = [
           {
               "bool": {
@@ -151,11 +155,35 @@ def search_records(keyword,  doctype, operator, size, municipality="", region=""
           }
       ]
   else:
-    filter = []  
-
-     
-  print(municipality, region)
-  print(filter)
+    filter = [
+          {
+              "bool": {
+                  "should": [
+                      {
+                          "match": {
+                              "grant_region": "{}".format(region)
+                          }
+                      },
+                      {
+                          "match": {
+                              "location_region": "{}".format(region)
+                          }
+                      },
+                      {
+                          "match": {
+                              "location_municipality": "{}".format(municipality)
+                          }
+                      },
+                      {
+                          "match": {
+                              "location_municipality": "{}".format(municipality)
+                          }
+                      }
+                  ]
+              }
+          }
+      ]
+    
   query = {
     "size" : size,
     "query": {
@@ -178,7 +206,7 @@ def search_records(keyword,  doctype, operator, size, municipality="", region=""
         }
     }
 }
-
+  print(query)
   index = None
   if 'activity' in doctype and 'entity' in doctype:
     index = "new-activities,entities" 
