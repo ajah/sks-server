@@ -98,7 +98,15 @@ def download():
   region = request.args.get("region") 
   if len(keyword) > 1:
     es.indices.refresh(index="*")
-    data = search_records(keyword=keyword,doctype=doctype,operator=operator,size=10000)
+    data = search_records(
+      keyword=keyword,
+      doctype=doctype,
+      operator=operator,
+      municipality=municipality,
+      region=region,
+      size=10000
+      )
+    # data = search_records(keyword=keyword,doctype=doctype,operator=operator,size=10000)
     csv = format_download(data)
     return Response(
         csv,
