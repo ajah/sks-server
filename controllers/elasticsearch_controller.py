@@ -16,7 +16,7 @@ while True:
         csv.field_size_limit(maxInt)
         break
     except OverflowError:
-        maxInt = int(maxInt / 10)
+        maxInt = int(mgit axInt / 10)
 
 pp = pprint.PrettyPrinter(indent=2)
 
