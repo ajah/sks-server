@@ -69,25 +69,30 @@ def home():
   return "Sector Knowledge Sharing Project"
 
 @app.route('/search', methods=['GET'])
-def search(municipality="",region=""):
-  keyword = request.args.get("q")
-  # Filter forms a list of the types in the URL to pass to ES
-  doctype = [r for r in request.args.get("doctype").split(",")]
-  operator = request.args.get("operator")
-  municipality = request.args.get("municipality") 
-  region = request.args.get("region") 
-  if len(keyword) > 1:
-    es.indices.refresh(index="*")
-    return search_records(
-      keyword=keyword,
-      doctype=doctype,
-      operator=operator,
-      municipality=municipality,
-      region=region,
-      size=100
-      )
-  else:
-    pass
+
+def search(municipality="", region="", terms=""):
+    keyword = request.args.get("q")
+    # Filter forms a list of the types in the URL to pass to ES
+    doctype = [r for r in request.args.get("doctype").split(",")]
+    operator = request.args.get("operator")
+    municipality = request.args.get("city")
+    region = request.args.get("region")
+    terms = request.args.get("terms")  # [r for r in request.args.get("terms").split(",")]
+    if len(keyword) > 1:
+        es.indices.refresh(index="*")
+        return search_records(
+            keyword=keyword,
+            doctype=doctype,
+            operator=operator,
+            municipality=municipality,
+            region=region,
+            terms=terms,
+            size=100
+        )
+    else:
+        pass
+
+
 
 @app.route('/download', methods=['GET'])
 def download():
