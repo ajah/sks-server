@@ -106,10 +106,10 @@ def search_all_records(index, es=es):
 
 def generate_reg_params(region):
     grant_reg = {}
-    grant_reg['match'] = {"grant_region": region}
+    grant_reg['match_phrase'] = {"grant_region": region}
 
     location_reg = {}
-    location_reg['match'] = {"location_region": region}
+    location_reg['match_phrase'] = {"location_region": region}
 
     should_reg = []
     should_reg.extend([grant_reg, location_reg])
@@ -118,58 +118,104 @@ def generate_reg_params(region):
 
 def generate_mun_params(municipality):
     grant_mun = {}
-    grant_mun['match'] = {"grant_municipality": municipality}
+    grant_mun['match_phrase'] = {"grant_municipality": municipality}
 
     location_mun = {}
-    location_mun['match'] = {"location_municipality": municipality}
+    location_mun['match_phrase'] = {"location_municipality": municipality}
 
     should_mun = []
     should_mun.extend([grant_mun, location_mun])
+
     return should_mun
 
 
-def build_filter(municipality=None, region=None):
+def handle_terms(terms):
+    term_list = []
+    if terms:
+        if 'efc_sustainability' in terms:
+            term_list.append('sustainability')
+
+    return term_list[0]
+
+
+def generate_term_params(terms):
+    """
+    "grant_title",
+    "Recipient_organization",
+    "Expected_results",
+    "Program_name",
+    "Name",
+    "focus_area",
+    """
+    term_list = handle_terms(terms)
+    must_terms = dict()
+    must_terms['multi_match'] = {
+        "query": term_list,
+        "fields": [
+            "grant_title",
+            "grant_description",
+            "expected_results",
+            "program_name",
+            "name",
+            "focus_area"
+        ]
+    }
+
+    return must_terms
+
+
+def build_filter(municipality=None, region=None, terms=None):
+    # Extend so that it contains the terms in the "must" column
     mun_params = []
     reg_params = []
+    term_params = []
 
     if municipality is not None:
         mun_params = generate_mun_params(municipality)
     if region is not None:
         reg_params = generate_reg_params(region)
+    if terms is not None:
+        term_params = generate_term_params(terms)
 
     should = []
     should = reg_params + mun_params
     filter_list = [
-        {"bool": {"should": should}}
+        {
+            "bool": {
+                "must": term_params,
+                "should": should,
+                "minimum_should_match": 1
+            }
+        }
     ]
     return filter_list
 
 
-def build_query(keyword, operator, municipality, region, size=None):
+def build_query(keyword, operator, municipality, region, terms, size=None):
     query = {
         "query": {
             "bool": {
                 "must": {
-                    "simple_query_string": {
+                    "multi_match": {
                         "query": keyword,
                         "fields": [
                             "grant_title",
-                            "grant_region",
-                            "grant_region",
+                            "grant_description",
+                            # "grant_region",
                             "recipient_organization",
-                            "grant_municipality",
+                            # "grant_municipality",
                             "expected_results",
                             "program_name",
                             "name",
                             "focus_area",
-                            "location_municipality",
-                            "location_region",
-                            "location_country"
+                            # "location_municipality",
+                            # "location_region",
+                            # "location_country"
                         ],
-                        "default_operator": operator
+                        "operator": operator
                     }
                 },
-                "filter": build_filter(municipality=municipality, region=region)
+                "filter": build_filter(municipality=municipality, region=region, terms=terms)
             }
         }
     }
@@ -194,9 +240,9 @@ def count_records(keyword, operator, municipality=None, region=None, es=es):
 
 
 def search_records(keyword, doctype, operator, size=None,
-                   municipality=None, region=None, index=None, es=es):
-
-    query = build_query(keyword, operator, municipality, region, size)
+                   municipality=None, region=None, terms=None, index=None, es=es):
+    # terms = handle_terms(terms)
+    query = build_query(keyword, operator, municipality, region, terms, size)
     index = None
     if 'activity' in doctype and 'entity' in doctype:
         index = "new-activities,entities"
@@ -217,6 +263,11 @@ def format_download(data):
     return csv
 
 
-# if __name__ == '__main__':
+if __name__ == '__main__':
+    # search?q=environment%20water&city=Toronto&doctype=activity,organization&operator=or&region=on&terms=efc_sustainability
+    test_query = build_query(keyword='environment water', municipality='Toronto',
+                             operator='or', region='on', terms='efc_sustainability')
+
+    print(json.dumps(test_query))
     # upload_data(acts_es,True, index='new-activities')
     # upload_data(ents_es,True, index='entities')
