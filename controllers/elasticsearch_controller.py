@@ -188,7 +188,7 @@ def build_filter(municipality=None, region=None, terms=None):
     return filter_list
 
 
-def build_query(keyword, operator, municipality, region, terms, size=None):
+def build_query(keyword, operator, municipality, region, terms=None, size=None):
     query = {
         "query": {
             "bool": {
