@@ -217,17 +217,17 @@ def build_query(keyword, operator, municipality, region, terms, size=None):
         }
     }
 
-    index = None
-    if 'activity' in doctype and 'entity' in doctype:
-        index = "new-activities,entities"
-        # index = "*"
-    elif doctype == ['activity']:
-        index = 'new-activities'
-    elif doctype == ['entity']:
-        index = 'entities'
+    # index = None
+    # if 'activity' in doctype and 'entity' in doctype:
+    #     index = "new-activities,entities"
+    #     # index = "*"
+    # elif doctype == ['activity']:
+    #     index = 'new-activities'
+    # elif doctype == ['entity']:
+    #     index = 'entities'
 
-        if size is not None:
-            query['size'] = size
+    if size is not None:
+        query['size'] = size
 
     return query
 
