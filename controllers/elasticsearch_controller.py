@@ -127,12 +127,12 @@ def generate_mun_params(municipality):
 
 
 def handle_terms(terms):
-    term_list = []
+    result = None
     if terms:
         if 'efc_sustainability' in terms:
-            term_list.append('sustainability')
+            result = 'sustainability'
 
-    return term_list[0]
+    return result
 
 
 def generate_term_params(terms):
@@ -154,7 +154,8 @@ def generate_term_params(terms):
             "expected_results",
             "program_name",
             "name",
-            "focus_area"
+            "focus_area",
+            "website_text"
         ]
     }
 
@@ -162,33 +163,63 @@ def generate_term_params(terms):
 
 
 def build_filter(municipality=None, region=None, terms=None):
+    """
+    Cases to accommodate: 
+        1. No filters
+        2. At least one filter
+    """
     # Extend so that it contains the terms in the "must" column
     mun_params = []
     reg_params = []
     term_params = []
 
-    if municipality is not None:
+    # If either terms or municipality
+    if municipality:
         mun_params = generate_mun_params(municipality)
-    if region is not None:
-        reg_params = generate_reg_params(region)
-    if terms is not None:
-        term_params = generate_term_params(terms)
 
-    should = []
-    should = reg_params + mun_params
-    filter_list = [
-        {
-            "bool": {
-                "must": term_params,
-                "should": should,
-                "minimum_should_match": 1
-            }
-        }
-    ]
-    return filter_list
+    if region:
+        reg_params = generate_reg_params(region)
+
+    # SEt up bool obj
+
+    bool_filter = dict()
+
+    # Case if terms
+    if terms:
+        bool_filter['bool'] = {}
+        term_params = generate_term_params(terms)
+        bool_filter['bool']['must'] = term_params
+
+    # Case if mun and reg
+    if municipality and region:
+        should = reg_params + mun_params
+        bool_filter['bool'] = {}
+        bool['should'] = should
+        bool_filter['bool']['minimum_should_match'] = 2
+
+    # Case if mun and not reg
+    if municipality and not region:
+        bool_filter['bool'] = {}
+        bool_filter['bool']['should'] = mun_params
+        bool_filter['bool']['minimum_should_match'] = 1
+
+    # Case if reg and not mun
+    elif region and not municipality:
+        bool_filter['bool'] = {}
+        bool_filter['bool']['should'] = reg_params
+        bool_filter['bool']['minimum_should_match'] = 1
+
+    # # If all are none
+    # elif not municipality and not region and not terms:
+    #     bool_filter = None
+
+    return [bool_filter]
 
 
 def build_query(keyword, operator, municipality, region, terms=None, size=None):
+    filter = []
+    if municipality or region or terms:
+        filter = build_filter(municipality=municipality, region=region, terms=terms)
     query = {
         "query": {
             "bool": {
@@ -205,6 +236,7 @@ def build_query(keyword, operator, municipality, region, terms=None, size=None):
                             "program_name",
                             "name",
                             "focus_area",
+                            "website_text"
                             # "location_municipality",
                             # "location_region",
                             # "location_country"
@@ -212,19 +244,10 @@ def build_query(keyword, operator, municipality, region, terms=None, size=None):
                         "operator": operator
                     }
                 },
-                "filter": build_filter(municipality=municipality, region=region, terms=terms)
+                "filter": filter
             }
         }
     }
-
-    # index = None
-    # if 'activity' in doctype and 'entity' in doctype:
-    #     index = "new-activities,entities"
-    #     # index = "*"
-    # elif doctype == ['activity']:
-    #     index = 'new-activities'
-    # elif doctype == ['entity']:
-    #     index = 'entities'
 
     if size is not None:
         query['size'] = size
@@ -269,11 +292,48 @@ def format_download(data):
     return csv
 
 
+# Functions for testing
+
+def handle_params(param, params):
+    p = [x for x in params if param in x]
+    result = ''
+    if p:
+        result = p[0].replace('{}='.format(param), '')
+
+    return result
+
+
+def extract_query_params(link):
+    before, after = link.split("?")
+    params = after.split("&")
+
+    q = handle_params('q', params)
+    # doctype = handle_params('doctype', params)
+    operator = handle_params('operator', params)
+    municipality = handle_params('municipality', params)
+    region = handle_params('region', params)
+    terms = handle_params('terms', params)
+
+    return q, operator, municipality, region, terms
+
+
 if __name__ == '__main__':
     # search?q=environment%20water&city=Toronto&doctype=activity,organization&operator=or&region=on&terms=efc_sustainability
-    test_query = build_query(keyword='environment water', municipality='Toronto',
-                             operator='or', region='on', terms='efc_sustainability')
-
+    # test_query = build_query(keyword='environment water', municipality='Toronto',
+    #                          operator='or', region='on',
+    #                          #  terms=''
+    #                          terms='efc_sustainability'
+    #                          )
+    # link = "http://127.0.0.1:5000/search?q=environment&doctype=activity,entity&municipality=toronto&operator=and&region=&terms=efc_sustainability"
+    link = "http://127.0.0.1:5000/search?q=environment&doctype=activity,entity&municipality=&operator=and&region=&terms="
+    q, operator, municipality, region, terms = extract_query_params(link)
+    test_query = build_query(
+        keyword=q,
+        operator=operator,
+        municipality=municipality,
+        region=region,
+        terms=terms
+    )
     print(json.dumps(test_query))
     # upload_data(acts_es,True, index='new-activities')
     # upload_data(ents_es,True, index='entities')
