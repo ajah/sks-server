@@ -166,43 +166,28 @@ def generate_location_params(municipality, region):
     return should
 
 
-def gen_term_filter_blocks(term):
-    base = {
-        "multi_match": {
-            "query": term,
-            "type": "phrase",
-            "fields": [
-                "grant_title",
-                "grant_description",
-                "expected_results",
-                "program_name",
-                "name",
-                "focus_area",
-                "website_text"
-            ]
+def gen_term_filter_blocks(terms):
+    term_blocks = []
+
+    for t in terms:
+        base = {
+            "multi_match": {
+                "query": t,
+                "type": "phrase",
+                "fields": [
+                    "grant_title",
+                    "grant_description",
+                    "expected_results",
+                    "program_name",
+                    "name",
+                    "focus_area",
+                    "website_text"
+                ]
+            }
         }
-    }
+        term_blocks.append(base)
 
-    return base
-
-
-# def handle_terms(terms):
-#     # terms=efc_sustainability,efc_climate%20change,efc_climate%20education
-#     result = []
-#     term_params = [t for t in terms.split(',')]
-
-#     term_dict = {
-#         'efc_sustainability': 'sustainability',
-#         'efc_climate%20change': 'climate change',
-#         'efc_climate%20education': 'climate education',
-#     }
-
-#     for t in term_dict.keys():
-#         if t in term_params:
-#             block = gen_term_filter_blocks(term_dict[t])
-#             result.append(block)
-
-#     return result
+    return term_blocks
 
 
 def generate_term_params(terms):
@@ -219,9 +204,9 @@ def generate_term_params(terms):
     term_params = [t for t in terms.split(',')]
 
     term_dict = {
-        'efc_sustainability': 'sustainability',
-        'efc_climate%20change': 'climate change',
-        'efc_climate%20education': 'climate education',
+        'efc_sustainability': ['energy efficient', 'biodiversity', 'recyclable'],
+        'efc_climate%20change': ['carbon footprint', 'extreme weather', 'greenhouse gases'],
+        'efc_climate%20education': ['global warming', 'UNFCC', 'water conservation'],
     }
 
     for t in term_dict.keys():
@@ -230,7 +215,7 @@ def generate_term_params(terms):
             term_filters.append(block)
 
     must_terms = dict()
-    must_terms['must'] = term_filters
+    must_terms['should'] = term_filters
 
     return term_filters
 
@@ -376,7 +361,7 @@ def extract_query_params(link):
 
 if __name__ == '__main__':
     # Test cases
-    link = "http://127.0.0.1:5000/search?q=environment&doctype=activity,entity&municipality=&operator=and&region=&terms=efc_sustainability,efc_climate%20change"
+    link = "http://127.0.0.1:5000/search?q=environment&doctype=activity,entity&municipality=toronto&operator=and&region=&terms=efc_sustainability,efc_climate%20change"
     q, operator, municipality, region, terms = extract_query_params(link)
     # print(terms)
     test_query = build_query(
