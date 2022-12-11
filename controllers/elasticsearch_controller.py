@@ -8,7 +8,7 @@ import pprint
 import json
 import sys
 import os
-from custom_filters import CUSTOM_FILTERS
+from .custom_filters import CUSTOM_FILTERS
 
 # decrease the maxInt value by factor 10 as long as the OverflowError occurs.
 maxInt = sys.maxsize
