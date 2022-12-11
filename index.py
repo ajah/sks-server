@@ -82,19 +82,20 @@ def search(municipality="", region="", terms=""):
     municipality = request.args.get("city")
     region = request.args.get("region")
     terms = request.args.get("terms")  # [r for r in request.args.get("terms").split(",")]
-    if len(keyword) > 1:
-        es.indices.refresh(index="*")
-        return search_records(
-            keyword=keyword,
-            doctype=doctype,
-            operator=operator,
-            municipality=municipality,
-            region=region,
-            terms=terms,
-            size=100
-        )
-    else:
-        pass
+    # if len(keyword) > 1 | keyword == None:
+    es.indices.refresh(index="*")
+
+    return search_records(
+        keyword=keyword,
+        doctype=doctype,
+        operator=operator,
+        municipality=municipality,
+        region=region,
+        terms=terms,
+        size=100
+    )
+    # else:
+    #     pass
 
 
 @app.route('/download', methods=['GET'])

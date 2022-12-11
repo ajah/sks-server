@@ -234,31 +234,32 @@ def build_query(keyword, operator, municipality, region, terms=None, size=None):
 
     query = {
         "query": {
-            "bool": {
-                "must": {
-                    "multi_match": {
-                        "query": keyword,
-                        "fields": [
-                            "grant_title",
-                            "grant_description",
-                            # "grant_region",
-                            "recipient_organization",
-                            # "grant_municipality",
-                            "expected_results",
-                            "program_name",
-                            "name",
-                            "focus_area",
-                            "website_text"
-                            # "location_municipality",
-                            # "location_region",
-                            # "location_country"
-                        ],
-                        "operator": operator
-                    }
-                },
-            }
+            "bool": {}
         }
     }
+
+    if keyword == None:
+        query['query']['bool']['must'] = {
+            "match_all": {}
+        },
+
+    else:
+        query['query']['bool']['must'] = {
+            "multi_match": {
+                "query": keyword,
+                "fields": [
+                    "grant_title",
+                    "grant_description",
+                    "recipient_organization",
+                    "expected_results",
+                    "program_name",
+                    "name",
+                    "focus_area",
+                    "website_text"
+                ],
+                "operator": operator
+            }
+        },
 
     if terms:
         include, exclude = generate_term_params(terms)
