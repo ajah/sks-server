@@ -8,6 +8,7 @@ import pprint
 import json
 import sys
 import os
+from custom_filters import CUSTOM_FILTERS
 
 # decrease the maxInt value by factor 10 as long as the OverflowError occurs.
 maxInt = sys.maxsize
@@ -146,78 +147,57 @@ def generate_location_params(municipality, region):
         if region:
             reg_params = generate_reg_params(region)
             should = reg_params + mun_params
-            should = should
-            # should['should'] = should
-            # should['minimum_should_match'] = 2
 
         else:
             should = mun_params
-            # should['should'] = mun_params
-            # should['minimum_should_match'] = 1
 
     elif not municipality:
         if region:
             should = generate_reg_params(region)
-            # should['should'] = generate_reg_params(region)
-            # should['minimum_should_match'] = 1
         else:
             pass
 
     return should
 
 
-def gen_term_filter_blocks(terms):
-    term_blocks = []
-
-    for t in terms:
-        base = {
-            "multi_match": {
-                "query": t,
-                "type": "phrase",
-                "fields": [
-                    "grant_title",
-                    "grant_description",
-                    "expected_results",
-                    "program_name",
-                    "name",
-                    "focus_area",
-                    "website_text"
-                ]
-            }
+def gen_term_filter_blocks(term):
+    base = {
+        "multi_match": {
+            "query": term,
+            "type": "phrase",
+            "fields": [
+                "grant_title",
+                "grant_description",
+                "expected_results",
+                "program_name",
+                "name",
+                "focus_area",
+                "website_text"
+            ]
         }
-        term_blocks.append(base)
+    }
 
-    return term_blocks
+    return base
 
 
 def generate_term_params(terms):
-    """
-    "grant_title",
-    "Recipient_organization",
-    "Expected_results",
-    "Program_name",
-    "Name",
-    "focus_area",
-    """
 
-    term_filters = []
+    include = []
+    exclude = []
     term_params = [t for t in terms.split(',')]
 
-    term_dict = {
-        'efc_sustainability': ['energy efficient', 'biodiversity', 'recyclable'],
-        'efc_climate%20change': ['carbon footprint', 'extreme weather', 'greenhouse gases'],
-        'efc_climate%20education': ['global warming', 'UNFCC', 'water conservation'],
-    }
+    term_dict = CUSTOM_FILTERS
 
     for t in term_dict.keys():
         if t in term_params:
-            block = gen_term_filter_blocks(term_dict[t])
-            term_filters.append(block)
+            for x in term_dict[t]['include']:
+                block = gen_term_filter_blocks(x)
+                include.append(block)
+            for x in term_dict[t]['exclude']:
+                block = gen_term_filter_blocks(x)
+                exclude.append(block)
 
-    must_terms = dict()
-    must_terms['should'] = term_filters
-
-    return term_filters
+    return include, exclude
 
 
 def build_filter(municipality=None, region=None, terms=None):
@@ -238,30 +218,20 @@ def build_filter(municipality=None, region=None, terms=None):
     # Set up bool filter
     bool_filter = dict()
     bool_filter['bool'] = {}
-
-    should = []
-    must = []
-
-    # Case if terms
-    if terms:
-        term_params = generate_term_params(terms)
-        must = term_params
+    params = []
 
     if (municipality or region):
-        should = generate_location_params(municipality, region)
-        should = should
-        bool_filter['bool']['minimum_should_match'] = int(len(should) / 2)
+        location_params = generate_location_params(municipality, region)
+        params.extend(location_params)
 
-    bool_filter['bool']['must'] = must
-    bool_filter['bool']['should'] = should
+    bool_filter['bool']['minimum_should_match'] = int(len(params) / 2)
+    bool_filter['bool']['should'] = params
 
     return [bool_filter]
 
 
 def build_query(keyword, operator, municipality, region, terms=None, size=None):
-    filter = []
-    if municipality or region or terms:
-        filter = build_filter(municipality=municipality, region=region, terms=terms)
+
     query = {
         "query": {
             "bool": {
@@ -286,10 +256,19 @@ def build_query(keyword, operator, municipality, region, terms=None, size=None):
                         "operator": operator
                     }
                 },
-                "filter": filter
             }
         }
     }
+
+    if terms:
+        include, exclude = generate_term_params(terms)
+        query['query']['bool']['should'] = include
+        query['query']['bool']['minimum_should_match'] = 1
+        query['query']['bool']['must_not'] = exclude
+
+    if municipality or region:
+        filter = build_filter(municipality=municipality, region=region)
+        query['query']['bool']['filter'] = filter
 
     if size is not None:
         query['size'] = size
@@ -361,9 +340,10 @@ def extract_query_params(link):
 
 if __name__ == '__main__':
     # Test cases
-    link = "http://127.0.0.1:5000/search?q=environment&doctype=activity,entity&municipality=toronto&operator=and&region=&terms=efc_sustainability,efc_climate%20change"
+    link = "http://127.0.0.1:5000/search?q=environment&doctype=activity,entity&municipality=toronto&operator=and&region=&terms=efc_climate%20change"
+    # link = "http://127.0.0.1:5000/search?q=environment&doctype=activity,entity&municipality=toronto&operator=and&region=&terms="
     q, operator, municipality, region, terms = extract_query_params(link)
-    # print(terms)
+
     test_query = build_query(
         keyword=q,
         operator=operator,
