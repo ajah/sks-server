@@ -238,34 +238,47 @@ def build_query(keyword, operator, municipality, region, terms=None, size=None):
         }
     }
 
-    if keyword == None:
-        query['query']['bool']['must'] = {
-            "match_all": {}
-        },
-
-    else:
-        query['query']['bool']['must'] = {
-            "multi_match": {
-                "query": keyword,
-                "fields": [
-                    "grant_title",
-                    "grant_description",
-                    "recipient_organization",
-                    "expected_results",
-                    "program_name",
-                    "name",
-                    "focus_area",
-                    "website_text"
-                ],
-                "operator": operator
-            }
-        },
+    keyword_block = {
+        "multi_match": {
+            "query": keyword,
+            "fields": [
+                "grant_title",
+                "grant_description",
+                "recipient_organization",
+                "expected_results",
+                "program_name",
+                "name",
+                "focus_area",
+                "website_text"
+            ],
+            "operator": operator
+        }
+    },
 
     if terms:
         include, exclude = generate_term_params(terms)
         query['query']['bool']['should'] = include
         query['query']['bool']['minimum_should_match'] = 1
         query['query']['bool']['must_not'] = exclude
+
+        # Terms and keyword
+        if keyword:
+            query['query']['bool']['must'] = keyword_block
+
+        # Terms but no keyword
+        else:
+            # Don't add anything else
+            pass
+
+    else:
+        # No terms, but keyword
+        if keyword:
+            query['query']['bool']['must'] = keyword_block
+        # No terms or keyword, return match_all
+        else:
+            query['query']['bool']['must'] = {
+                "match_all": {}
+            }
 
     if municipality or region:
         filter = build_filter(municipality=municipality, region=region)
@@ -277,8 +290,8 @@ def build_query(keyword, operator, municipality, region, terms=None, size=None):
     return query
 
 
-def count_records(keyword, operator, municipality=None, region=None, es=es):
-    query = build_query(keyword, operator, municipality, region)
+def count_records(keyword, operator, municipality=None, region=None, terms=None, es=es):
+    query = build_query(keyword, operator, municipality, region, terms)
 
     resp_dict = {}
 
@@ -341,8 +354,9 @@ def extract_query_params(link):
 
 if __name__ == '__main__':
     # Test cases
-    link = "http://127.0.0.1:5000/search?q=environment&doctype=activity,entity&municipality=toronto&operator=and&region=&terms=efc_climate%20change"
+    # link = "http://127.0.0.1:5000/search?q=environment&doctype=activity,entity&municipality=toronto&operator=and&region=&terms=efc_climate%20change"
     # link = "http://127.0.0.1:5000/search?q=environment&doctype=activity,entity&municipality=toronto&operator=and&region=&terms="
+    link = "http://127.0.0.1:5000/search?q=&doctype=activity,entity&municipality=&operator=and&region=&terms=efc_sustainability"
     q, operator, municipality, region, terms = extract_query_params(link)
 
     test_query = build_query(

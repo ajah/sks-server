@@ -103,8 +103,9 @@ def download():
     keyword = request.args.get("q")
     doctype = [r for r in request.args.get("doctype").split(",")]
     operator = request.args.get("operator")
-    municipality = request.args.get("municipality")
+    municipality = request.args.get("city")
     region = request.args.get("region")
+    terms = request.args.get("terms")
     if len(keyword) > 1:
         es.indices.refresh(index="*")
         data = search_records(
@@ -113,6 +114,7 @@ def download():
             operator=operator,
             municipality=municipality,
             region=region,
+            terms=terms,
             size=10000
         )
         # data = search_records(keyword=keyword,doctype=doctype,operator=operator,size=10000)
@@ -135,16 +137,20 @@ def search_all(index):
 @app.route('/count', methods=['GET'])
 def count():
     keyword = request.args.get("q")
-    # doctype = [r for r in request.args.get("doctype").split(",")]
     operator = request.args.get("operator")
-    if len(keyword) > 1:
-        es.indices.refresh(index="*")
-        return count_records(
-            keyword=keyword,
-            operator=operator
-        )
-    else:
-        pass
+    municipality = request.args.get("city")
+    region = request.args.get("region")
+    terms = request.args.get("terms")  # [r for r in request.args.get("terms").split(",")]
+    # if len(keyword) > 1 | keyword == None:
+    es.indices.refresh(index="*")
+
+    return count_records(
+        keyword=keyword,
+        operator=operator,
+        municipality=municipality,
+        region=region,
+        terms=terms
+    )
 
 
 @app.route('/testentity')
