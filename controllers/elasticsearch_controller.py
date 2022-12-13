@@ -323,7 +323,7 @@ def search_records(keyword, doctype, operator, size=None,
 
 def format_download(data):
     hits = [d['_source'] for d in data['hits']]
-    csv = pd.DataFrame([x for x in hits]).drop(columns='Unnamed: 0').to_csv()
+    csv = pd.DataFrame([x for x in hits]).to_csv()
     return csv
 
 
