@@ -36,6 +36,18 @@ def comma_separated_params_to_list(param):
     return result
 
 
+def extract_params(request):
+    # Filter forms a list of the types in the URL to pass to ES
+    keyword = request.args.get("q")
+    doctype = [r for r in request.args.get("doctype").split(",")]
+    operator = request.args.get("operator")
+    municipality = request.args.get("city")
+    region = request.args.get("region")
+    terms = request.args.get("terms")
+
+    return keyword, doctype, operator, municipality, region, terms
+
+
 es = connect_elasticsearch()
 
 app = Flask(__name__)
@@ -75,14 +87,7 @@ def home():
 
 @app.route('/search', methods=['GET'])
 def search(municipality="", region="", terms=""):
-    keyword = request.args.get("q")
-    # Filter forms a list of the types in the URL to pass to ES
-    doctype = [r for r in request.args.get("doctype").split(",")]
-    operator = request.args.get("operator")
-    municipality = request.args.get("city")
-    region = request.args.get("region")
-    terms = request.args.get("terms")  # [r for r in request.args.get("terms").split(",")]
-    # if len(keyword) > 1 | keyword == None:
+    keyword, doctype, operator, municipality, region, terms = extract_params(request)
     es.indices.refresh(index="*")
 
     return search_records(
@@ -94,38 +99,29 @@ def search(municipality="", region="", terms=""):
         terms=terms,
         size=100
     )
-    # else:
-    #     pass
 
 
 @app.route('/download', methods=['GET'])
-def download():
-    keyword = request.args.get("q")
-    doctype = [r for r in request.args.get("doctype").split(",")]
-    operator = request.args.get("operator")
-    municipality = request.args.get("city")
-    region = request.args.get("region")
-    terms = request.args.get("terms")
-    if len(keyword) > 1:
-        es.indices.refresh(index="*")
-        data = search_records(
-            keyword=keyword,
-            doctype=doctype,
-            operator=operator,
-            municipality=municipality,
-            region=region,
-            terms=terms,
-            size=10000
-        )
-        # data = search_records(keyword=keyword,doctype=doctype,operator=operator,size=10000)
-        csv = format_download(data)
-        return Response(
-            csv,
-            mimetype="text/csv",
-            headers={"Content-disposition":
-                     "attachment; filename=sks-download.csv"})
-    else:
-        pass
+def download(municipality="", region="", terms=""):
+    keyword, doctype, operator, municipality, region, terms = extract_params(request)
+
+    es.indices.refresh(index="*")
+    data = search_records(
+        keyword=keyword,
+        doctype=doctype,
+        operator=operator,
+        municipality=municipality,
+        region=region,
+        terms=terms,
+        size=10000
+    )
+
+    csv = format_download(data)
+    return Response(
+        csv,
+        mimetype="text/csv",
+        headers={"Content-disposition":
+                 "attachment; filename=sks-download.csv"})
 
 
 @app.route('/search-all/<index>', methods=['GET'])
@@ -135,13 +131,8 @@ def search_all(index):
 
 
 @app.route('/count', methods=['GET'])
-def count():
-    keyword = request.args.get("q")
-    operator = request.args.get("operator")
-    municipality = request.args.get("city")
-    region = request.args.get("region")
-    terms = request.args.get("terms")  # [r for r in request.args.get("terms").split(",")]
-    # if len(keyword) > 1 | keyword == None:
+def count(municipality="", region="", terms=""):
+    keyword, _, operator, municipality, region, terms = extract_params(request)
     es.indices.refresh(index="*")
 
     return count_records(
