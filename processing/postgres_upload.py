@@ -1,20 +1,21 @@
 import psycopg2
 import csv
-import glob, os
+import glob
+import os
 from itertools import islice
 import sys
 
 maxInt = sys.maxsize
 
 while True:
-    # decrease the maxInt value by factor 10 
+    # decrease the maxInt value by factor 10
     # as long as the OverflowError occurs.
 
     try:
         csv.field_size_limit(maxInt)
         break
     except OverflowError:
-        maxInt = int(maxInt/10)
+        maxInt = int(maxInt / 10)
 
 activities = None
 entities = None
@@ -29,7 +30,7 @@ for file in glob.glob("*.csv"):
 
 def create_tables():
     """ create tables in the PostgreSQL database"""
-    act_command =  """
+    act_command = """
         CREATE TABLE activities (
             act_sks_id INTEGER PRIMARY KEY,
             source_id VARCHAR,
@@ -56,7 +57,7 @@ def create_tables():
         )
         """
     # Note; revenue & employees need to be changed later
-    ent_command =  """
+    ent_command = """
         CREATE TABLE entities (
             ent_sks_id INTEGER PRIMARY KEY,
             external_id VARCHAR,
@@ -85,27 +86,22 @@ def create_tables():
     try:
         # read the connection parameters
         # reading params from env vars
-        DATABASE=os.getenv('DATABASE')
-        HOST=os.getenv('HOST')
-        USER=os.getenv('USER')
-        PASSWORD=os.getenv('PASSWORD')
-        DB_PORT=os.getenv('DB_PORT')
+        DATABASE = os.getenv('DATABASE')
+        HOST = os.getenv('HOST')
+        USER = os.getenv('USER')
+        PASSWORD = os.getenv('PASSWORD')
+        DB_PORT = os.getenv('DB_PORT')
 
         conn = psycopg2.connect(
-            dbname=DATABASE, 
-            user=USER, 
-            password=PASSWORD, 
+            dbname=DATABASE,
+            user=USER,
+            password=PASSWORD,
             host=HOST,
             port=DB_PORT)
         # connect to the PostgreSQL server
 
         cur = conn.cursor()
-        # create table one by one
-        # for command in commands:
-        # cur.execute(ent_command)
         cur.execute(act_command)
-        # for command in [act_command, ent_command]:
-        #     cur.execute(command)
         # close communication with the PostgreSQL database server
         cur.close()
         # commit the changes
@@ -116,16 +112,18 @@ def create_tables():
         if conn is not None:
             conn.close()
 
+
 def insert_rows_acts():
     with open(activities, 'r') as f:
         reader = csv.reader(f)
-        next(reader) # Skip the header row.
+        next(reader)  # Skip the header row.
         for row in reader:
-        # for row in islice(reader, 10):
+            # for row in islice(reader, 10):
             try:
                 insert_row_act(row)
-            except: 
+            except:
                 pass
+
 
 def insert_row_act(row):
     act_fields = [
@@ -150,12 +148,13 @@ def insert_row_act(row):
         'expected_results',
         'ent_sks_id',
         'program_name',
-        'type', 
+        'type',
     ]
-    placeholders = ["%s"] * len(act_fields) # Generates correct number of placeholders
+    placeholders = ["%s"] * len(act_fields)  # Generates correct number of placeholders
 
-    sql = "INSERT INTO activities({}) VALUES({}) RETURNING act_sks_id".format(", ".join(act_fields), ", ".join(placeholders))
-    
+    sql = "INSERT INTO activities({}) VALUES({}) RETURNING act_sks_id".format(
+        ", ".join(act_fields), ", ".join(placeholders))
+
     conn = None
     record_id = None
     try:
@@ -180,6 +179,7 @@ def insert_row_act(row):
             conn.close()
 
     return record_id
+
 
 def insert_row_ents(row):
     ent_fields = [
@@ -205,10 +205,11 @@ def insert_row_ents(row):
         'legal_status_date',
         'type'
     ]
-    placeholders = ["%s"] * len(ent_fields) # Generates correct number of placeholders
+    placeholders = ["%s"] * len(ent_fields)  # Generates correct number of placeholders
 
-    sql = "INSERT INTO entities({}) VALUES({}) RETURNING ent_sks_id".format(", ".join(ent_fields), ", ".join(placeholders))
-    
+    sql = "INSERT INTO entities({}) VALUES({}) RETURNING ent_sks_id".format(
+        ", ".join(ent_fields), ", ".join(placeholders))
+
     conn = None
     record_id = None
     try:
@@ -234,14 +235,15 @@ def insert_row_ents(row):
 
     return record_id
 
+
 def insert_rows_ents():
     with open(entities, 'r') as f:
         reader = csv.reader(f)
-        next(reader) # Skip the header row.
+        next(reader)  # Skip the header row.
         for row in reader:
             try:
                 insert_row_ents(row)
-            except: 
+            except:
                 pass
 
 
@@ -249,4 +251,3 @@ if __name__ == '__main__':
     create_tables()
     insert_rows_acts()
     insert_rows_ents()
-
