@@ -1,38 +1,98 @@
 # Sector Knowledge Sharing (SKS) Server
 
 ## Project Overview
+
 This repository is part of the Sectork Knowledge Sharing (SKS) Project. For a detailed overview of this project, please go to our [SKS Hub Roadmap](https://github.com/orgs/ajah/projects/4). The Roadmap has a more detailed readme, in addition to showing the upcoming updates, features and the known bugs/issues of the SKS Hub.
 
 You can also find the SKS Hub interface code in this [repository](https://github.com/ajah/sks-interface) and the data from the hub in this [repository](https://github.com/ajah/skshub-data)
 
+## Docs Directory
 
-> Note: This documentation is not yet complete
+- [Application Setup](https://www.google.com)
+- [Modifying Custom Filters](https://www.google.com)
+- [Processing docs](https://www.google.com)
+- [Web scraper docs](https://www.google.com)
 
-This API reads the underlying CSV to serve data to the NPK Interface.
+## Application Setup
 
-## Starting the Server
+### Requirements:
 
-`./startup.sh`
+This application depends on a remote-hosted database and Elasticsearch instance.
 
-## Data Processing
+During setup, take note of the following variables to export to the app in the next step:
 
-Navigate to the 'processing' directory (`cd sks-project/sks-backend/processing`) and run:
+- Remote-hosted database such as PostgreSQL
+  - Database name
+  - Database host address
+  - Database port
+  - Database user
+  - Database password
+- Remote-hosted Elasticsearch instance
+  - ES Username
+  - ES Password
 
-`python process_entities.py`
+### Steps
 
-This will output to the data folder (sks-project/sks-backend/data):
+- Clone the Github repository
+- Create a virtual environment for the repo
+- Export the following variables:
+  - FLASK_APP=./sks-backend/index.py
+  - FLASK_ENV=development
+  - DATABASE=[Database name]
+  - HOST=[Database host address]
+  - USER=[Database user
+  - PASSWORD=[Database password]
+  - DB_PORT=[Database port]
+  - ES_USERNAME=[ES Username]
+  - ES_PASSWORD=[ES Password]
+- Test the application is running with:
+  - flask run -h 0.0.0.0
 
-- sks*entities_public*[timestamp].csv: Which becomes the file publicly available for download at [github.com/ajah/skshub-data]()
-- sks*entities_interface*[timestamp].csv: Which becomes the file uploaded to Postgres & Elasticsearch for use by the front-end interface (this is the same as the public version except it contains text scraped from entity websites to enhance search results)
-- sks*entities_merge*[timestamp].csv: For use in the next step in processing activities, which will append the ent_npk_id for applicable actitives
+Once the application is running, it acts as a a REST API to serve the data (once processed) to an interface.
 
-Next, run:
+## Custom Filters
 
-`python process_activities.py`
+Terms for the interface’s custom filters for the interface can be defined in sks-backend/controllers/custom_filters.py.
 
-This will output an sks*activities*[timestamp] to the data folder and leverages the 'merge' version of the entities CSV above.
+- Admins with access to the code can define inclusions and exclusions in dictionary format.
+  - You can change or add new terms up to 5 terms per inclusion/exclusion
+  - These will be treated as phrases by the search engine
+- These will work immediately in the ES search for the filters already defined (efc_sustainability, efc_climate%20change, - efc_climate%20education) but new filters require front-end work in order to appear on the interface
+- The results will contain at least one of the inclusions in either the visible fields accessible on the interface, or they may be hidden in the website text field not currently displayed there; and none of the exclusions
 
-sks*activities*[timestamp].csv & sks*entities_interface*[timestamp].csv will be used by the Postgres and elasticsearch Handlers, which search the data folder for CSVs. For this reason, only keep **one** version of all CSVs in the data/processed directory at all times.
+Usage:
+
+- In a code editor or the Github interface, change the text within the square brackets to reflect the terms you’d like included and excluded by these filters
+
+## Processing
+
+- Before proceeding, ensure the main raw CSV is located at: sks-backend/data/raw/full_proactive_disclosure_dataset.csv
+- Navigate to the processed/ directory
+- Ensure you process the entities before the activites, as the process_activities.py script depends on the output of `process_entities.py`
+
+### Processing Activities
+
+Usage:
+
+- Run: `python process_activities.py`
+- Check the resulting CSV is exported to data/processed
+
+### Processing Entities
+
+The process_entities.py script outputs the following CSVs:
+
+- \_interface: Renders a CSV containing all data plus features required for the functioning of the SKS hub interface (contains - the most information)
+- \_public: Renders a CSV hosted on Github (skshub-data) for easy download, does not contain additional features for interface
+- \_merge: Minimal CSV containing entity ids to merge wit the rpocess_activiates
+- \_es: Elasticsearch-specific output for uploading to elasticstearch in following step
+
+Usage:
+
+- Run: `python process_entities.py`
+- Check the resulting CSVs is exported to data/processed
+- Run tests
+- Check the output passes data tests by running this from the processing/ directory:
+  - `pytest tests`
 
 ## Elasticsearch
 
@@ -41,3 +101,7 @@ sks*activities*[timestamp].csv & sks*entities_interface*[timestamp].csv will be 
 When running locally, searches can be done using this URL syntax:
 
 `http://localhost:5000/search?q=accessibility$filter=activity,entity`
+
+## Web scraper
+
+Coming soon!
