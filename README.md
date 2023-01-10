@@ -8,10 +8,10 @@ You can also find the SKS Hub interface code in this [repository](https://github
 
 ## Docs Directory
 
-- [Application Setup](https://www.google.com)
-- [Modifying Custom Filters](https://www.google.com)
-- [Processing docs](https://www.google.com)
-- [Web scraper docs](https://www.google.com)
+- [Application Setup](#application-setup)
+- [Modifying Custom Filters](#custom-filters)
+- [Processing docs](#processing)
+- [Web scraper docs](#web-scraper)
 
 ## Application Setup
 
