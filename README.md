@@ -104,4 +104,11 @@ When running locally, searches can be done using this URL syntax:
 
 ## Web scraper
 
-Coming soon!
+The web scraper takes in a CSV of entity domains and scrapes all the body text from their homepage. This information is then used to enhance search results on the application, but isn't current visible on the interface.
+
+Usage:
+
+- Ensure the "web_scraper_urls.csv" is housed in the webscraper/data folder, or add one by making a CSV from one of the `process_entities.py` outputs containing just the "BN" and "website" columns.
+- Run `scrape.py`
+
+The results will be saved to the webscraper/data folder as "output.csv".

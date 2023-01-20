@@ -258,7 +258,7 @@ result_df = pd.DataFrame(valid_returns)
 df1 = df.merge(result_df, on='website', how='left')
 
 # export path (not including .csv)
-export_path = '/Users/brittany/repos/sks-project/sks-backend/webscraper/data/'
+export_path = ''  # Update to your path
 df1.to_csv(f'{export_path}.csv.zip',
            index=False,
            quoting=2,

@@ -5,7 +5,6 @@ from elasticsearch import Elasticsearch, helpers
 from os.path import join, dirname
 from dotenv import load_dotenv
 import pprint
-import json
 import sys
 import os
 from .custom_filters import CUSTOM_FILTERS
@@ -27,18 +26,12 @@ load_dotenv()
 ents_es = "sks-backend/data/processed/ents_es_upload.csv"
 
 
-def csv_to_json(filepath):
-    df = pd.read_csv(filepath)
-    json_df = df.to_json(orient='records')
-    return json.loads(json_df)
-
-
 def connect_elasticsearch():
     # es = Elasticsearch([{'host': 'localhost', 'port': 9200}])
     es_username = os.getenv('ES_USERNAME')
     es_password = os.getenv('ES_PASSWORD')
     es = Elasticsearch(
-        cloud_id="SKS_Project:bm9ydGhhbWVyaWNhLW5vcnRoZWFzdDEuZ2NwLmVsYXN0aWMtY2xvdWQuY29tJGNlZGUyYjk4M2ZmZjRlYWI5ZDZkNzMxZmM3Nzc1YzU4JGU2ZDA1OTFmYmViZjRjY2Y4YWYxZDJlNGE5MzhiZmEx",
+        cloud_id=os.getenv('ES_CLOUD_ID'),
         http_auth=(es_username, es_password),
     )
 
@@ -51,38 +44,6 @@ def connect_elasticsearch():
 
 
 es = connect_elasticsearch()
-
-# Bulk upload working for entities
-
-
-def bulk_upload(doc, index, es=es):
-    with open(doc, 'r') as outfile:
-        reader = csv.DictReader(outfile)
-        next(reader)  # Skips header row
-        helpers.bulk(es, reader, index=index, doc_type="type")
-
-# Bulk upload not working for activities, adding line by line until resolved
-
-
-def upload_data(doc, bool, index, es=es):
-    if bool == True:
-        data = csv_to_json(doc)
-        for d in data:
-            r = store_record(es, index, d)
-
-
-def store_record(es_object, index, data):
-    is_stored = True
-
-    try:
-        outcome = es_object.index(index=index, doc_type='_doc', body=json.dumps(data))
-        print(outcome['result'])
-    except Exception as ex:
-        print('Error in indexing data')
-        print(str(ex))
-        is_stored = False
-    finally:
-        return is_stored
 
 
 def delete_index(index, es=es):
@@ -354,8 +315,6 @@ def extract_query_params(link):
 
 if __name__ == '__main__':
     # Test cases
-    # link = "http://127.0.0.1:5000/search?q=environment&doctype=activity,entity&municipality=toronto&operator=and&region=&terms=efc_climate%20change"
-    # link = "http://127.0.0.1:5000/search?q=environment&doctype=activity,entity&municipality=toronto&operator=and&region=&terms="
     link = "http://127.0.0.1:5000/search?q=&doctype=activity,entity&municipality=&operator=and&region=&terms=efc_sustainability"
     q, operator, municipality, region, terms = extract_query_params(link)
 
